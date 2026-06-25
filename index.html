@@ -63,7 +63,9 @@ function load(cat,e){
 
   grid.innerHTML = DATA[cat]
     .map(img =>
-      `<img loading="lazy" src="${R2}/${img}">`
+      // Đảm bảo không bị thừa dấu / khi ghép nối
+<img loading="lazy" src="${R2}${img}"> 
+// (Lưu ý: Là ${R2}${img} chứ không phải ${R2}/${img} vì trong biến img ở catalog.json đã có dấu / ở đầu rồi, ví dụ: "1. HỒ 644/ảnh.webp")
     ).join('');
 }
 
