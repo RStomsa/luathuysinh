@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalog</title>
+
+<style>
+body{margin:0;font-family:Arial;display:flex;height:100vh;}
+#menu{width:220px;background:#111;color:#fff;overflow:auto;}
+.cat{padding:12px;cursor:pointer;border-bottom:1px solid #222;}
+.cat.active{background:#333;}
+#content{flex:1;overflow:auto;padding:10px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+img{width:100%;border-radius:8px;aspect-ratio:1/1;object-fit:cover;}
+@media(max-width:768px){
+  body{flex-direction:column;}
+  #menu{width:100%;display:flex;overflow-x:auto;}
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu">
+  <div id="cats"></div>
+</div>
+
+<div id="content">
+  <div id="grid" class="grid"></div>
+</div>
+
+<script>
+
+const R2 = "https://billowing-math-5db1.vinhtaithan.workers.dev/";
+
+let DATA = {};
+
+fetch("catalog.json")
+.then(r => r.json())
+.then(json => {
+  DATA = json;
+  renderMenu();
+  const first = Object.keys(DATA)[0];
+  load(first);
+});
+
+function renderMenu(){
+  document.getElementById("cats").innerHTML =
+    Object.keys(DATA).map(k =>
+      `<div class="cat" onclick="load('${k}',event)">${k}</div>`
+    ).join('');
+}
+
+function load(cat,e){
+
+  document.querySelectorAll(".cat")
+    .forEach(x=>x.classList.remove("active"));
+
+  e?.target?.classList.add("active");
+
+  const grid = document.getElementById("grid");
+
+  grid.innerHTML = DATA[cat]
+    .map(img =>
+      `<img loading="lazy" src="${R2}/${img}">`
+    ).join('');
+}
+
+</script>
+
+</body>
+</html>
