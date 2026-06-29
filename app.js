@@ -7,9 +7,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentImagesList = [];
 
     const gallery = document.getElementById("gallery");
-    const searchBoxSearch = document.querySelector(".search-box");
+    const searchBox = document.querySelector(".search-box");
 
-    // Load Cache Catalog
+    // Tải Cache Catalog
     const cached = localStorage.getItem("catalog_cache");
     if (cached) {
         catalogData = JSON.parse(cached);
@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </svg>`;
     }
 
+    // Phân cấp menu sidebar
     function renderSidebar(categories) {
         const sidebar = document.getElementById("sidebar");
         sidebar.innerHTML = "";
@@ -49,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const btn = document.createElement("button");
             btn.className = "sidebar-item";
             
-            // Xử lý cây thư mục: Lấy tên thư mục cấp thấp nhất hoặc hiển thị nguyên bản
+            // Xử lý tên hiển thị menu gọn gàng
             const cleanName = category.split('/').pop().replace(/_/g, ' ');
             btn.innerHTML = `${getLeafIconSvg()} <span>${cleanName}</span>`;
             btn.dataset.category = category;
@@ -65,35 +66,36 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         currentCategory = category;
+        // Lấy mảng object chứa cả đường dẫn R2 và ID Google Drive
         currentImagesList = catalogData[category] || [];
         loadedImagesCount = 0;
         gallery.innerHTML = ""; 
         
-        // Reset cuộn lên đỉnh khi đổi thư mục
         gallery.scrollTo(0, 0);
         loadMoreImages();
     }
 
-    // Sửa chuẩn vô hạn cuộn (Infinite Scroll) chuẩn xác trên container gallery
+    // Nạp ảnh phân đoạn chống lag
     function loadMoreImages() {
         const imagesToLoad = currentImagesList.slice(loadedImagesCount, loadedImagesCount + BATCH_LOAD);
         if (imagesToLoad.length === 0) return;
 
         const fragment = document.createDocumentFragment();
 
-        imagesToLoad.forEach(imgPath => {
+        imagesToLoad.forEach(item => {
             const card = document.createElement("div");
             card.className = "gallery-card";
             
             const img = document.createElement("img");
-            const fullR2Url = `${R2_DOMAIN}/${encodeURIComponent(imgPath)}`;
+            const fullR2Url = `${R2_DOMAIN}/${encodeURIComponent(item.path)}`;
             
             img.dataset.src = fullR2Url;
-            img.alt = imgPath.split('/').pop().replace(/\.[^/.]+$/, "");
+            img.alt = item.path.split('/').pop().replace(/\.[^/.]+$/, "");
             img.className = "lazy-img";
             img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
             
-            card.addEventListener("click", () => openLightbox(fullR2Url));
+            // Bấm vào thẻ ảnh mở popup kèm ID liên kết file gốc Drive
+            card.addEventListener("click", () => openLightbox(fullR2Url, item.id));
             
             card.appendChild(img);
             fragment.appendChild(card);
@@ -104,9 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadedImagesCount += BATCH_LOAD;
     }
 
-    // Lắng nghe sự kiện cuộn trực tiếp trên khung #gallery (div .gallery-grid)
     gallery.addEventListener("scroll", () => {
-        // Kiểm tra chiều cao cuộn của chính thẻ main#gallery
         if (gallery.scrollTop + gallery.clientHeight >= gallery.scrollHeight - 150) {
             loadMoreImages();
         }
@@ -130,19 +130,65 @@ document.addEventListener("DOMContentLoaded", () => {
         lazyImages.forEach(img => observer.observe(img));
     }
 
-    // Lightbox xử lý phóng to
+    // 🌟 Lightbox Tích hợp Nút xem file gốc Drive
     const lightbox = document.getElementById("lightbox");
     const lightboxImg = document.getElementById("lightboxImg");
     const closeBtn = document.querySelector(".lightbox-close");
+    
+    // Tạo thêm nút "Xem File Gốc" dưới khung lightbox
+    let viewOriginalBtn = document.getElementById("viewOriginalBtn");
+    if (!viewOriginalBtn) {
+        viewOriginalBtn = document.createElement("a");
+        viewOriginalBtn.id = "viewOriginalBtn";
+        viewOriginalBtn.className = "lightbox-view-original";
+        viewOriginalBtn.target = "_blank";
+        viewOriginalBtn.innerHTML = "📂 Xem file gốc trên Drive";
+        lightbox.appendChild(viewOriginalBtn);
+        
+        // CSS inline nhanh cho nút xem file gốc
+        const styleNode = document.createElement("style");
+        styleNode.innerHTML = `
+            .lightbox-view-original {
+                position: absolute;
+                bottom: 20px;
+                background-color: rgba(38, 166, 154, 0.9);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: bold;
+                border: 1px solid rgba(255,255,255,0.2);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                transition: background-color 0.2s, transform 0.2s;
+                z-index: 2010;
+            }
+            .lightbox-view-original:hover {
+                background-color: #00897b;
+                transform: scale(1.05);
+            }
+        `;
+        document.head.appendChild(styleNode);
+    }
 
-    function openLightbox(imgSrc) {
+    function openLightbox(imgSrc, driveId) {
         lightboxImg.src = imgSrc;
+        
+        // Trỏ link trực tiếp tới file gốc Google Drive thông qua ID
+        if (driveId) {
+            viewOriginalBtn.href = `https://drive.google.com/file/d/${driveId}/view`;
+            viewOriginalBtn.style.display = "block";
+        } else {
+            viewOriginalBtn.style.display = "none";
+        }
+        
         lightbox.classList.add("active");
         document.body.style.overflow = 'hidden';
     }
 
     function closeLightbox() {
         lightbox.classList.remove("active");
+        viewOriginalBtn.style.display = "none";
         document.body.style.overflow = '';
         setTimeout(() => { lightboxImg.src = ""; }, 300);
     }
@@ -152,27 +198,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     lightbox.addEventListener("click", (e) => {
-        // Tránh bấm vào ảnh bị tắt popup
-        if (e.target !== lightboxImg && !e.target.closest('.lightbox-close')) {
+        // Tránh bấm vào ảnh/nút bị tắt popup
+        if (e.target !== lightboxImg && !e.target.closest('.lightbox-close') && e.target !== viewOriginalBtn) {
             closeLightbox();
         }
     });
 
     // Tìm kiếm
-    const searchBox = document.querySelector(".search-box");
-    if (searchBox) {
-        searchBox.addEventListener("input", (e) => {
-            const keyword = e.target.value.toLowerCase();
-            const allCards = gallery.querySelectorAll(".gallery-card");
-            
-            allCards.forEach(card => {
-                const imgAlt = card.querySelector("img").alt.toLowerCase();
-                if (imgAlt.includes(keyword)) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
-            });
+    searchBox.addEventListener("input", (e) => {
+        const keyword = e.target.value.toLowerCase();
+        const allCards = gallery.querySelectorAll(".gallery-card");
+        
+        allCards.forEach(card => {
+            const imgAlt = card.querySelector("img").alt.toLowerCase();
+            if (imgAlt.includes(keyword)) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
         });
-    }
+    });
 });
