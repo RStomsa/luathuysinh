@@ -1,0 +1,244 @@
+/* ==========================================================================
+   CSS TỔNG HỢP - GIAO DIỆN CATALOG THỦY SINH
+   ========================================================================== */
+
+:root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #ffffff;
+    --text-secondary: #aaaaaa;
+    --accent-color: #00b0ff;
+    --header-height: 60px;
+    --sidebar-width: 140px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header & Search (Mobile chuẩn Shopee) --- */
+.header-bar {
+    height: var(--header-height);
+    background-color: var(--card-bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-color);
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+.search-box {
+    flex-grow: 1;
+    max-width: 400px;
+    height: 36px;
+    border-radius: 18px;
+    border: 1px solid #333;
+    background-color: #2a2a2a;
+    color: var(--text-color);
+    padding: 0 16px;
+    outline: none;
+    font-size: 14px;
+}
+
+.search-box::placeholder {
+    color: var(--text-secondary);
+}
+
+/* --- Layout chính --- */
+.main-layout {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - var(--header-height));
+    overflow: hidden;
+}
+
+/* --- Sidebar Menu trái (Mobile) --- */
+.sidebar-menu {
+    width: var(--sidebar-width);
+    background-color: #161616;
+    overflow-y: auto;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.sidebar-item {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 16px 12px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255,255,255,0.03);
+    color: var(--text-color);
+}
+
+.sidebar-item.active {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-left-color: #26a69a;
+    font-weight: bold;
+}
+
+/* --- Gallery & Grid Ảnh --- */
+.gallery-grid {
+    flex: 1;
+    background-color: var(--bg-color);
+    padding: 16px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    align-content: start;
+}
+
+@media (min-width: 600px) {
+    .gallery-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .gallery-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.gallery-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    position: relative;
+    aspect-ratio: 1 / 1;
+}
+
+/* Khung load ảnh nhẹ / Skeleton */
+.gallery-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.gallery-card img.loaded {
+    opacity: 1;
+}
+
+/* --- Lightbox Xem ảnh chi tiết --- */
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.lightbox-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox-img {
+    max-width: 90%;
+    max-height: 85%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.lightbox-overlay.active .lightbox-img {
+    transform: scale(1);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- Responsive & Mobile CSS tối ưu --- */
+@media (max-width: 480px) {
+    :root {
+        --sidebar-width: 110px;
+    }
+    
+    .header-bar {
+        padding: 0 10px;
+    }
+    
+    .logo {
+        font-size: 14px;
+    }
+    
+    .search-box {
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .sidebar-item {
+        padding: 12px 8px;
+        font-size: 12px;
+    }
+    
+    .gallery-grid {
+        padding: 10px;
+        gap: 8px;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
