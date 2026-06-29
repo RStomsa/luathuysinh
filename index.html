@@ -10,12 +10,17 @@
 
     <header class="header-bar">
         <div class="logo">🌿 Thủy Sinh</div>
-        <input type="text" class="search-box" placeholder="Tìm kiếm cây, lũa...">
+        <input type="text" class="search-box" placeholder="Tìm kiếm cây, lũa, bố cục...">
     </header>
 
     <div class="main-layout">
         <aside id="sidebar" class="sidebar-menu"></aside>
         <main id="gallery" class="gallery-grid"></main>
+    </div>
+
+    <div id="lightbox" class="lightbox-overlay">
+        <button class="lightbox-close">&times;</button>
+        <img id="lightboxImg" class="lightbox-img" src="" alt="Zoomed Image">
     </div>
 
     <script src="./app.js"></script>

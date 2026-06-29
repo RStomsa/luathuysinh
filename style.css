@@ -1,15 +1,10 @@
-/* ==========================================================================
-   CSS TỔNG HỢP - GIAO DIỆN CATALOG THỦY SINH
-   ========================================================================== */
-
 :root {
     --bg-color: #121212;
     --card-bg: #1e1e1e;
     --text-color: #ffffff;
     --text-secondary: #aaaaaa;
-    --accent-color: #00b0ff;
     --header-height: 60px;
-    --sidebar-width: 140px;
+    --sidebar-width: 130px;
 }
 
 * {
@@ -21,13 +16,14 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-/* --- Header & Search (Mobile chuẩn Shopee) --- */
+/* --- Header --- */
 .header-bar {
     height: var(--header-height);
     background-color: var(--card-bg);
@@ -39,10 +35,11 @@ body {
     top: 0;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    flex-shrink: 0;
 }
 
 .logo {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     color: var(--text-color);
     white-space: nowrap;
@@ -72,9 +69,10 @@ body {
     flex: 1;
     height: calc(100vh - var(--header-height));
     overflow: hidden;
+    position: relative;
 }
 
-/* --- Sidebar Menu trái (Mobile) --- */
+/* --- Sidebar (Menu trái) --- */
 .sidebar-menu {
     width: var(--sidebar-width);
     background-color: #161616;
@@ -82,17 +80,17 @@ body {
     border-right: 1px solid #333;
     display: flex;
     flex-direction: column;
-    padding-bottom: 20px;
     flex-shrink: 0;
+    padding-bottom: 20px;
 }
 
 .sidebar-item {
     background: none;
     border: none;
     color: var(--text-secondary);
-    padding: 16px 12px;
+    padding: 16px 10px;
     text-align: left;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -100,6 +98,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-shrink: 0;
 }
 
 .sidebar-item:hover {
@@ -110,11 +109,11 @@ body {
 .sidebar-item.active {
     background-color: var(--card-bg);
     color: var(--text-color);
-    border-left-color: #26a69a;
+    border-left-color: #00b0ff;
     font-weight: bold;
 }
 
-/* --- Gallery & Grid Ảnh --- */
+/* --- Gallery (Khung lưới ảnh) --- */
 .gallery-grid {
     flex: 1;
     background-color: var(--bg-color);
@@ -124,6 +123,7 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     align-content: start;
+    -webkit-overflow-scrolling: touch;
 }
 
 @media (min-width: 600px) {
@@ -145,9 +145,14 @@ body {
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     position: relative;
     aspect-ratio: 1 / 1;
+    cursor: pointer; /* Hiển thị trỏ chuột khi hover để ám chỉ có thể bấm */
+    transition: transform 0.2s ease;
 }
 
-/* Khung load ảnh nhẹ / Skeleton */
+.gallery-card:active {
+    transform: scale(0.96); /* Hiển thị bấm chạm chuẩn app mobile */
+}
+
 .gallery-card img {
     width: 100%;
     height: 100%;
@@ -160,7 +165,7 @@ body {
     opacity: 1;
 }
 
-/* --- Lightbox Xem ảnh chi tiết --- */
+/* --- Lightbox (Xem ảnh to) --- */
 .lightbox-overlay {
     position: fixed;
     top: 0;
@@ -198,21 +203,22 @@ body {
 
 .lightbox-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 15px;
+    right: 15px;
     color: #fff;
-    font-size: 32px;
+    font-size: 28px;
     cursor: pointer;
     background: none;
     border: none;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2005;
 }
 
-/* --- Responsive & Mobile CSS tối ưu --- */
+/* --- Responsive Mobile tối ưu --- */
 @media (max-width: 480px) {
     :root {
         --sidebar-width: 110px;
@@ -223,7 +229,7 @@ body {
     }
     
     .logo {
-        font-size: 14px;
+        font-size: 13px;
     }
     
     .search-box {
@@ -232,8 +238,8 @@ body {
     }
 
     .sidebar-item {
-        padding: 12px 8px;
-        font-size: 12px;
+        padding: 14px 6px;
+        font-size: 11px;
     }
     
     .gallery-grid {
