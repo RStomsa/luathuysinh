@@ -134,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Vô hạn cuộn (Infinite Scroll) load ảnh thông minh
+   // Nạp ảnh phân đoạn chống lag
     function loadMoreImages() {
         const imagesToLoad = currentImagesList.slice(loadedImagesCount, loadedImagesCount + BATCH_LOAD);
         if (imagesToLoad.length === 0) return;
@@ -141,6 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const fragment = document.createDocumentFragment();
 
         imagesToLoad.forEach(item => {
+            // 🛑 BẢO VỆ: Nếu item không tồn tại hoặc thiếu thuộc tính path, bỏ qua để tránh lỗi split
+            if (!item || !item.path) return;
+
             const card = document.createElement("div");
             card.className = "gallery-card";
             
@@ -148,10 +152,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const fullR2Url = `${R2_DOMAIN}/${encodeURIComponent(item.path)}`;
             
             img.dataset.src = fullR2Url;
-            img.alt = item.path.split('/').pop().replace(/\.[^/.]+$/, "");
+            
+            // 🌟 AN TOÀN: Kiểm tra chuỗi an toàn trước khi gọi split lấy đuôi file
+            const filePathStr = typeof item.path === 'string' ? item.path : "";
+            img.alt = filePathStr.split('/').pop().replace(/\.[^/.]+$/, "");
+            
             img.className = "lazy-img";
             img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
             
+            // Bấm vào thẻ ảnh mở popup kèm ID liên kết file gốc Drive
             card.addEventListener("click", () => openLightbox(fullR2Url, item.id));
             
             card.appendChild(img);
