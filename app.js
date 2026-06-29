@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const R2_DOMAIN = "https://pub-7ea26a5215634e0c92af75bd92031d99.r2.dev";
     
     let catalogData = {};
+    let currentCategory = "";
     let loadedImagesCount = 0;
     const BATCH_LOAD = 16;
     let currentImagesList = [];
@@ -9,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const gallery = document.getElementById("gallery");
     const searchBox = document.querySelector(".search-box");
 
-    // Tải Cache Catalog
+    // Load Cache Catalog
     const cached = localStorage.getItem("catalog_cache");
     if (cached) {
         catalogData = JSON.parse(cached);
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function initApp(catalog) {
         const validCategories = Object.keys(catalog).filter(key => catalog[key] && catalog[key].length > 0);
-        renderSidebar(validCategories);
+        renderTreeMenu(validCategories, catalog);
         if (validCategories.length > 0) {
             switchCategory(validCategories[0]);
         }
@@ -41,23 +42,81 @@ document.addEventListener("DOMContentLoaded", () => {
         </svg>`;
     }
 
-    // Phân cấp menu sidebar
-    function renderSidebar(categories) {
+    // 🌟 Dựng Menu cây thư mục đa cấp phân tầng (Nested Tree Menu)
+    function renderTreeMenu(categories, catalog) {
         const sidebar = document.getElementById("sidebar");
         sidebar.innerHTML = "";
         
-        categories.forEach(category => {
-            const btn = document.createElement("button");
-            btn.className = "sidebar-item";
+        // Xây dựng cây thư mục từ các Key phân tầng trong catalog
+        const tree = {};
+        
+        categories.forEach(categoryPath => {
+            // Tách đường dẫn bằng dấu gạch chéo '/'
+            const parts = categoryPath.split('/'); 
+            let currentLevel = tree;
             
-            // Xử lý tên hiển thị menu gọn gàng
-            const cleanName = category.split('/').pop().replace(/_/g, ' ');
-            btn.innerHTML = `${getLeafIconSvg()} <span>${cleanName}</span>`;
-            btn.dataset.category = category;
-            
-            btn.addEventListener("click", () => switchCategory(category));
-            sidebar.appendChild(btn);
+            parts.forEach((part, index) => {
+                if (!currentLevel[part]) {
+                    currentLevel[part] = {
+                        __path: parts.slice(0, index + 1).join('/'),
+                        __isLeaf: index === parts.length - 1,
+                        __children: {}
+                    };
+                }
+                currentLevel = currentLevel[part].__children;
+            });
         });
+
+        // Đệ quy vẽ cây menu ra Sidebar
+        function drawNodes(container, nodes) {
+            Object.keys(nodes).forEach(nodeKey => {
+                const node = nodes[nodeKey];
+                const nodePath = node.__path;
+                
+                const btn = document.createElement("button");
+                btn.className = "sidebar-item";
+                btn.style.paddingLeft = `${15 + (nodePath.split('/').length - 1) * 12}px`; // Thụt lề theo cấp độ sâu
+                
+                const cleanName = nodeKey.replace(/_/g, ' ');
+                btn.innerHTML = `${getLeafIconSvg()} <span>${cleanName}</span>`;
+                
+                // Kiểm tra nếu mục này có ảnh bên trong (là điểm cuối phân loại)
+                if (catalog[nodePath] && catalog[nodePath].length > 0) {
+                    btn.dataset.category = nodePath;
+                    btn.addEventListener("click", () => switchCategory(nodePath));
+                    container.appendChild(btn);
+                } 
+                // Nếu là thư mục trung gian (không chứa ảnh trực tiếp, chỉ chứa thư mục con)
+                else if (Object.keys(node.__children).length > 0) {
+                    btn.classList.add("folder-node");
+                    
+                    const iconArrow = document.createElement("span");
+                    iconArrow.innerHTML = " ▶";
+                    iconArrow.style.fontSize = "10px";
+                    iconArrow.style.marginLeft = "auto";
+                    btn.appendChild(iconArrow);
+                    
+                    const subContainer = document.createElement("div");
+                    subContainer.className = "folder-children";
+                    subContainer.style.display = "none"; // Mặc định ẩn các nút con
+                    
+                    btn.addEventListener("click", () => {
+                        const isVisible = subContainer.style.display === "block";
+                        subContainer.style.display = isVisible ? "none" : "block";
+                        iconArrow.innerHTML = isVisible ? " ▶" : " ▼";
+                    });
+                    
+                    container.appendChild(btn);
+                    container.appendChild(subContainer);
+                    drawNodes(subContainer, node.__children);
+                    return;
+                }
+                
+                container.appendChild(btn);
+            });
+        }
+
+        drawNodes(sidebar, tree);
     }
 
     function switchCategory(category) {
@@ -66,7 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         currentCategory = category;
-        // Lấy mảng object chứa cả đường dẫn R2 và ID Google Drive
         currentImagesList = catalogData[category] || [];
         loadedImagesCount = 0;
         gallery.innerHTML = ""; 
@@ -75,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadMoreImages();
     }
 
-    // Nạp ảnh phân đoạn chống lag
+    // Vô hạn cuộn (Infinite Scroll) load ảnh thông minh
     function loadMoreImages() {
         const imagesToLoad = currentImagesList.slice(loadedImagesCount, loadedImagesCount + BATCH_LOAD);
         if (imagesToLoad.length === 0) return;
@@ -94,7 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
             img.className = "lazy-img";
             img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
             
-            // Bấm vào thẻ ảnh mở popup kèm ID liên kết file gốc Drive
             card.addEventListener("click", () => openLightbox(fullR2Url, item.id));
             
             card.appendChild(img);
@@ -102,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         gallery.appendChild(fragment);
-        activeLazyLoad();
+        activeLazyLoadImages();
         loadedImagesCount += BATCH_LOAD;
     }
 
@@ -112,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    function activeLazyLoad() {
+    function LazyLoadImages() {
         const lazyImages = document.querySelectorAll(".lazy-img:not(.observed)");
         
         const observer = new IntersectionObserver((entries, observer) => {
@@ -130,12 +187,11 @@ document.addEventListener("DOMContentLoaded", () => {
         lazyImages.forEach(img => observer.observe(img));
     }
 
-    // 🌟 Lightbox Tích hợp Nút xem file gốc Drive
+    // Lightbox xem ảnh to kèm nút xem file gốc Drive
     const lightbox = document.getElementById("lightbox");
     const lightboxImg = document.getElementById("lightboxImg");
     const closeBtn = document.querySelector(".lightbox-close");
     
-    // Tạo thêm nút "Xem File Gốc" dưới khung lightbox
     let viewOriginalBtn = document.getElementById("viewOriginalBtn");
     if (!viewOriginalBtn) {
         viewOriginalBtn = document.createElement("a");
@@ -145,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
         viewOriginalBtn.innerHTML = "📂 Xem file gốc trên Drive";
         lightbox.appendChild(viewOriginalBtn);
         
-        // CSS inline nhanh cho nút xem file gốc
         const styleNode = document.createElement("style");
         styleNode.innerHTML = `
             .lightbox-view-original {
@@ -174,7 +229,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function openLightbox(imgSrc, driveId) {
         lightboxImg.src = imgSrc;
         
-        // Trỏ link trực tiếp tới file gốc Google Drive thông qua ID
         if (driveId) {
             viewOriginalBtn.href = `https://drive.google.com/file/d/${driveId}/view`;
             viewOriginalBtn.style.display = "block";
@@ -198,13 +252,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     lightbox.addEventListener("click", (e) => {
-        // Tránh bấm vào ảnh/nút bị tắt popup
         if (e.target !== lightboxImg && !e.target.closest('.lightbox-close') && e.target !== viewOriginalBtn) {
             closeLightbox();
         }
     });
 
-    // Tìm kiếm
+    // Thanh tìm kiếm
     searchBox.addEventListener("input", (e) => {
         const keyword = e.target.value.toLowerCase();
         const allCards = gallery.querySelectorAll(".gallery-card");
