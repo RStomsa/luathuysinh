@@ -3,183 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh Mục Thủy Sinh</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #ffffff;
-            --r2-domain: "https://pub-7ea26a5215634e0c92af75bd92031d99.r2.dev";
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Bố cục lưới cho danh mục (Catalog Grid) */
-        .catalog-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        @media (min-width: 768px) {
-            .catalog-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .folder-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            text-decoration: none;
-            color: var(--text-color);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .folder-card:active {
-            transform: scale(0.96);
-        }
-
-        /* Khung hình ảnh chuẩn tỷ lệ 4:3 */
-        .folder-img-wrapper {
-            position: relative;
-            width: 100%;
-            padding-top: 75%; 
-            background-color: #2a2a2a;
-        }
-
-        .folder-img-wrapper img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .folder-title {
-            padding: 14px 10px;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-            text-transform: uppercase;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Khu vực hiển thị danh sách ảnh chi tiết (Sản phẩm) */
-        .image-list-section {
-            margin-top: 40px;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .section-title {
-            font-size: 18px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .image-item img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-    </style>
+    <title>Catalog Thủy Sinh</title>
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
-    <h1>Danh Mục Thủy Sinh</h1>
-    
-    <div class="catalog-grid" id="catalogContainer">
-        </div>
+    <header class="header-bar">
+        <div class="logo">🌿 Thủy Sinh</div>
+        <input type="text" class="search-box" placeholder="Tìm kiếm cây, lũa...">
+    </header>
 
-    <div id="detailedSections" class="image-list-section">
-        </div>
+    <div class="main-layout">
+        <aside id="sidebar" class="sidebar-menu"></aside>
+        <main id="gallery" class="gallery-grid"></main>
+    </div>
 
-    <script>
-        const R2_URL = "https://pub-7ea26a5215634e0c92af75bd92031d99.r2.dev";
-
-        // Tải file catalog.json được build tự động từ GitHub Pages
-        fetch('./catalog.json')
-            .then(response => response.json())
-            .then(catalog => {
-                const catalogContainer = document.getElementById('catalogContainer');
-                const detailedSections = document.getElementById('detailedSections');
-
-                // Lọc ra các thư mục có chứa ít nhất 1 ảnh
-                const folderNames = Object.keys(catalog).filter(folder => catalog[folder].length > 0);
-
-                folderNames.forEach(folder => {
-                    const imagesList = catalog[folder];
-                    // Lấy ngẫu nhiên 1 ảnh trong thư mục làm ảnh đại diện (thumbnail)
-                    const randomImage = imagesList[Math.floor(Math.random() * imagesList.length)];
-                    const folderThumbnail = `${R2_URL}/${encodeURIComponent(randomImage)}`;
-
-                    // 1. Tạo khối hiển thị thẻ danh mục (Danh mục cấp 1)
-                    const folderCard = `
-                        <a href="#folder-${encodeURIComponent(folder)}" class="folder-card">
-                            <div class="folder-img-wrapper">
-                                <img src="${folderThumbnail}" alt="${folder}" loading="lazy">
-                            </div>
-                            <div class="folder-title">${folder}</div>
-                        </a>
-                    `;
-                    catalogContainer.innerHTML += folderCard;
-
-                    // 2. Tạo danh sách ảnh chi tiết nhóm bên dưới (Giao diện cấp 2)
-                    let imagesHtml = '';
-                    imagesList.forEach(img => {
-                        imagesHtml += `
-                            <div class="image-item">
-                                <img src="${R2_URL}/${encodeURIComponent(img)}" alt="${img}" loading="lazy">
-                            </div>
-                        `;
-                    });
-
-                    const sectionHtml = `
-                        <div id="folder-${encodeURIComponent(folder)}" style="scroll-margin-top: 20px;">
-                            <h2 class="section-title">${folder}</h2>
-                            <div class="image-grid">
-                                ${imagesHtml}
-                            </div>
-                        </div>
-                    `;
-                    detailedSections.innerHTML += sectionHtml;
-                });
-            })
-            .catch(err => console.error("Lỗi tải hoặc phân tích file catalog.json:", err));
-    </script>
+    <script src="./js/app.js"></script>
 </body>
 </html>
